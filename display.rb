@@ -1,11 +1,15 @@
 #Handles screen output from board;
 
 class Display
-  def initialize(board)
+
+  attr_reader :cursor, :board
+  def initialize(board, cursor)
     @board = board
+    @cursor = cursor
   end
 
   def render
+    system("clear")
     string = ""
     row_letters = %w[8 7 6 5 4 3 2 1]
     footer = "  A  B  C  D  E  F  G  H \n"
@@ -17,13 +21,13 @@ class Display
       end
       string << "\n"
     end
-    string + footer
+    puts string + footer
   end
 
   def color(pos)
     background = (pos[0] + pos[1]).even? ? :light_blue : :light_green
-    background = :red if cursor.at(pos)
-    background = :yellow if cursor.selected(pos)
+    background = :red if cursor.at?(pos)
+    background = :yellow if cursor.selected?(pos)
     color = board.player_color(pos)
 
     {color: color, background: background}
@@ -32,15 +36,25 @@ class Display
 end
 
 class Cursor
-  attr_reader :row_pos, :col_pos, :row_range, :col_range
+  attr_reader :row_pos, :col_pos, :row_range, :col_range, :pos
+  attr_accessor :pos, :selected_pos
   def initialize(row_range = (0..7), col_range = (0..7))
     @pos = [0, 0]
     @row_range = row_range
     @col_range = col_range
+    @selected_pos = [nil, nil]
   end
 
-  def pos
-    [@row_pos, @col_pos]
+  def at?(pos)
+    pos == self.pos
+  end
+
+  def selected?(pos)
+    selected_pos == pos
+  end
+
+  def select!
+    self.selected_pos = pos
   end
 
   def move(direction)
@@ -52,12 +66,13 @@ class Cursor
     }
     offset = offsets[direction]
     new_pos = [pos[0] + offset[0], pos[1] + offset[1]]
-    pos = new_pos if valid?(new_pos)
+    self.pos = new_pos if valid?(new_pos)
   end
 
   def valid?(pos)
     row = pos[0]
     col = pos[1]
     return false unless (row_range.include?(row) && col_range.include?(col))
+    true
   end
 end

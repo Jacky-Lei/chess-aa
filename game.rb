@@ -14,17 +14,34 @@ require "colorize"
 
 class Game
   attr_accessor :key_press
+  attr_reader :display, :board, :cursor
+  include KeyPress
 
   def initialize
     @key_press = nil
+    @cursor = Cursor.new
+    @board = Board.new
+    @display = Display.new(@board, @cursor)
   end
 
   def play
     until game_over?
-      @key_press = get_key_press 
+      display.render
+      @key_press = get_key_press
       process_key_press
-      print board
     end
     game_over!
   end
+
+  def game_over?
+    false
+  end
+
+  def game_over!
+    false
+  end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  Game.new.play
 end

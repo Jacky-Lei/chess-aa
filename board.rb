@@ -39,5 +39,6 @@ class Board
 
   def player_color(pos)
     grid[pos[0]][pos[1]].color
+  end
 
 end

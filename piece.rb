@@ -3,7 +3,7 @@
 
 class Piece
   attr_reader :color
-  
+
   def initialize(color)
     @color = color
   end
@@ -28,10 +28,10 @@ class Piece
   end
 
   def Piece.to_s(char)
-    " " + character + " "
   end
 
-  def to_s(character = "#")
+  def to_s(character = " ")
+    " " + character + " "
     #is piece under cursor?
     #if yes, background color = magenta
     #if no, background color = default
