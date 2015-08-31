@@ -27,6 +27,8 @@ class Board
     [WP, WP, WP, WP, WP, WP, WP, WP],
     [WR, WN, WB, WQ, WK, WB, WN, WR]
   ]
+  attr_reader :grid
+
   def initialize
     @grid = DEFAULT_GRID.map do |row|
       row.map do |piece_info|
@@ -34,5 +36,8 @@ class Board
       end
     end
   end
+
+  def player_color(pos)
+    grid[pos[0]][pos[1]].color
 
 end
