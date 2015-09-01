@@ -15,32 +15,13 @@ Create methods for valid_moves (return all valid moves a piece can make)
 =end
 class Piece
   attr_reader :color, :board
-  attr_accessor :pos, :moved
+  attr_accessor :pos, :moved, :board
 
   def initialize(color, pos, board)
     @color = color
     @pos = pos
     @moved = false
     @board = board
-  end
-
-  def Piece.generate(type, color, pos, board)
-    case type
-    when :pawn
-      Pawn.new(color, pos, board)
-    when :bishop
-      Bishop.new(color, pos, board)
-    when :knight
-      Knight.new(color, pos, board)
-    when :rook
-      Rook.new(color, pos, board)
-    when :queen
-      Queen.new(color, pos, board)
-    when :king
-      King.new(color, pos, board)
-    else
-      EmptyPiece.new(color, pos, board)
-    end
   end
 
   def empty?
@@ -52,10 +33,13 @@ class Piece
   end
 
   def valid_move?(new_pos)
-    row_offset = new_pos[:row] - pos[:row]
-    col_offset = new_pos[:col] - pos[:col]
-    return false if (row_offset == 0 && col_offset == 0)
-    true
+    return valid_moves.include?(new_pos)
+  end
+
+  def valid_moves(check_next_level=true)
+    res = possible_moves.delete_if do |move_data|
+      move_data[:color] == self.color || (check_next_level && board.hypothetical_check(pos, move_data[:pos], self.color))
+    end.map {|move_data| move_data[:pos]}
   end
 
 end
@@ -65,20 +49,16 @@ class Pawn < Piece
     super("♙")
   end
 
-  def valid_move?(new_pos)
-    return false unless super
-    row_offset = new_pos[:row] - pos[:row]
-    col_offset = new_pos[:col] - pos[:col]
-
-    offsets = [row_offset, col_offset]
-    valid_direction = (color == :white ? -1 : 1)
-    return true if offsets == [valid_direction * 1, 0]
-    return true if offsets == [valid_direction * 2, 0] && !moved
-    return true if offsets == [valid_direction * 1, 1]#forward, right
-    return true if offsets == [valid_direction * 1, -1]#forward, left
-    #need to check en passant
-    false
+  def possible_moves(check_next_level=true)
+    moves_data = board.pawn_moves(pos, @moved)
+    # p "Do we make it to here?"
+    # super(moves_data, check_next_level)
   end
+
+  def valid_moves
+    possible_moves
+  end
+
 end
 
 class Bishop < Piece
@@ -86,20 +66,10 @@ class Bishop < Piece
     super("♗")
   end
 
-  def valid_moves
-    moves_data = board.diagonal_moves(pos)
-    moves_data.delete_if do |data|
-      data[:color] == self.color || board.hypothetical_check(data[:pos], self.color)
-    end.map {|el| el[:pos]}
-  end
+  def possible_moves(check_next_level=true)
+    move_data = board.diagonal_moves(pos)
+    # move_data.map {|key, value| value[:pos]}
 
-  def valid_move?(new_pos)
-    return false unless super
-    row_offset = new_pos[:row] - pos[:row]
-    col_offset = new_pos[:col] - pos[:col]
-    # return true if row_offset.abs == col_offset.abs
-    return true if valid_moves.include?(new_pos)
-    false
   end
 end
 
@@ -108,14 +78,10 @@ class Knight < Piece
     super("♘")
   end
 
-  def valid_move?(new_pos)
-    return false unless super
-    row_offset = new_pos[:row] - pos[:row]
-    col_offset = new_pos[:col] - pos[:col]
+  def possible_moves(check_next_level=true)
+    move_data = board.knight_moves(pos)
+    # move_data.map {|key, value| value[:pos]}
 
-    offsets = [row_offset.abs, col_offset.abs].sort
-    return true if offsets == [1, 2]
-    false
   end
 end
 
@@ -124,12 +90,10 @@ class Rook < Piece
     super("♖")
   end
 
-  def valid_move?(new_pos)
-    return false unless super
-    row_offset = new_pos[:row] - pos[:row]
-    col_offset = new_pos[:col] - pos[:col]
-    return true if (row_offset == 0 || col_offset == 0)
-    false
+  def possible_moves(check_next_level=true)
+    move_data = board.lateral_moves(pos)
+    # move_data.map {|key, value| value[:pos]}
+
   end
 end
 
@@ -138,13 +102,10 @@ class Queen < Piece
     super("♕")
   end
 
-  def valid_move?(new_pos)
-    return false unless super
-    row_offset = new_pos[:row] - pos[:row]
-    col_offset = new_pos[:col] - pos[:col]
-    return true if row_offset.abs == col_offset.abs
-    return true if (row_offset == 0 || col_offset == 0)
-    false
+  def possible_moves(check_next_level=true)
+    moves_data = board.diagonal_moves(pos) + board.lateral_moves(pos)
+    move_data.map {|key, value| value[:pos]}
+
   end
 end
 
@@ -152,18 +113,21 @@ class King < Piece
   def to_s
     super("♔")
   end
-  def valid_move?(new_pos)
-    return false unless super
-    row_offset = new_pos[:row] - pos[:row]
-    col_offset = new_pos[:col] - pos[:col]
-    return true if row_offset.abs <= 1 && col_offset.abs <= 1
-    false
+
+  def possible_moves(check_next_level=true)
+    move_data = board.lateral_moves(pos, 1) + board.diagonal_moves(pos, 1)
+    move_data.map {|key, value| value[:pos]}
+
   end
 end
 
 class EmptyPiece < Piece
   def valid_move?(to)
     return false
+  end
+
+  def possible_moves(check_next_level=true)
+    []
   end
 
   def empty?

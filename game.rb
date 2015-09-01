@@ -12,9 +12,9 @@ Move handling of moving pieces to another method outside Cursor#select!
 
 =end
 
+load "piece.rb"
 load "board.rb"
 load "display.rb"
-load "piece.rb"
 load "player.rb"
 load "cursor.rb"
 load "cursor_input.rb"
@@ -24,7 +24,7 @@ NIL_POSITION = {row: nil, col: nil}
 class Game
   attr_accessor :key_press
   attr_reader :display, :board, :cursor
-  include KeyPress
+  include KeyPressable
 
   def initialize
     @key_press = nil
