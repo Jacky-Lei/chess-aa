@@ -3,10 +3,10 @@ class Cursor
   attr_accessor :pos, :selected_pos
 
   def initialize(board, row_range = (0..7), col_range = (0..7))
-    @pos = [0, 0]
+    @pos = {row: 0, col: 0}
     @row_range = row_range
     @col_range = col_range
-    @selected_pos = [nil, nil]
+    @selected_pos = {row: nil, col: nil}
     @board = board
   end
 
@@ -21,7 +21,7 @@ class Cursor
   def select!
     if selected?(pos)
       deselect!
-    elsif !selected?([nil, nil]) #second move
+    elsif !selected?(NIL_POSITION) #second move
       board.move(selected_pos, pos) #move me!
       deselect!
     else
@@ -30,27 +30,27 @@ class Cursor
   end
 
   def deselect!
-    self.selected_pos = [nil, nil] #consider special class
+    self.selected_pos = NIL_POSITION #consider special class
   end
 
   def move(direction)
     offsets = {
-      up: [-1, 0],
-      down: [1, 0],
-      right: [0, 1],
-      left: [0, -1]
+      up: {row: -1, col: 0},
+      down: {row: 1, col: 0},
+      right: {row: 0, col: 1},
+      left: {row: 0, col: -1}
     }
 
     offset = offsets[direction]
     raise "Invalid Direction" if offset.nil?
-
-    new_pos = [pos[0] + offset[0], pos[1] + offset[1]]
+    p pos
+    new_pos = {row: (pos[:row] + offset[:row]), col: (pos[:col] + offset[:col])}
     self.pos = new_pos if valid?(new_pos)
   end
 
   def valid?(pos)
-    row = pos[0]
-    col = pos[1]
+    row = pos[:row]
+    col = pos[:col]
     return false unless (row_range.include?(row) && col_range.include?(col))
     true
   end

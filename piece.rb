@@ -14,32 +14,37 @@ Also check that move does not create suicidal conditions. (Own check.)
 Create methods for valid_moves (return all valid moves a piece can make)
 =end
 class Piece
-  attr_reader :color
+  attr_reader :color, :board
   attr_accessor :pos, :moved
 
-  def initialize(color, pos)
+  def initialize(color, pos, board)
     @color = color
     @pos = pos
     @moved = false
+    @board = board
   end
 
-  def Piece.generate(type, color, pos)
+  def Piece.generate(type, color, pos, board)
     case type
     when :pawn
-      Pawn.new(color, pos)
+      Pawn.new(color, pos, board)
     when :bishop
-      Bishop.new(color, pos)
+      Bishop.new(color, pos, board)
     when :knight
-      Knight.new(color, pos)
+      Knight.new(color, pos, board)
     when :rook
-      Rook.new(color, pos)
+      Rook.new(color, pos, board)
     when :queen
-      Queen.new(color, pos)
+      Queen.new(color, pos, board)
     when :king
-      King.new(color, pos)
+      King.new(color, pos, board)
     else
-      EmptyPiece.new(color, pos)
+      EmptyPiece.new(color, pos, board)
     end
+  end
+
+  def empty?
+    false
   end
 
   def to_s(character = " ")
@@ -47,8 +52,8 @@ class Piece
   end
 
   def valid_move?(new_pos)
-    row_offset = new_pos[0] - pos[0]
-    col_offset = new_pos[1] - pos[1]
+    row_offset = new_pos[:row] - pos[:row]
+    col_offset = new_pos[:col] - pos[:col]
     return false if (row_offset == 0 && col_offset == 0)
     true
   end
@@ -62,8 +67,8 @@ class Pawn < Piece
 
   def valid_move?(new_pos)
     return false unless super
-    row_offset = new_pos[0] - pos[0]
-    col_offset = new_pos[1] - pos[1]
+    row_offset = new_pos[:row] - pos[:row]
+    col_offset = new_pos[:col] - pos[:col]
 
     offsets = [row_offset, col_offset]
     valid_direction = (color == :white ? -1 : 1)
@@ -81,11 +86,19 @@ class Bishop < Piece
     super("♗")
   end
 
+  def valid_moves
+    moves_data = board.diagonal_moves(pos)
+    moves_data.delete_if do |data|
+      data[:color] == self.color || board.hypothetical_check(data[:pos], self.color)
+    end.map {|el| el[:pos]}
+  end
+
   def valid_move?(new_pos)
     return false unless super
-    row_offset = new_pos[0] - pos[0]
-    col_offset = new_pos[1] - pos[1]
-    return true if row_offset.abs == col_offset.abs
+    row_offset = new_pos[:row] - pos[:row]
+    col_offset = new_pos[:col] - pos[:col]
+    # return true if row_offset.abs == col_offset.abs
+    return true if valid_moves.include?(new_pos)
     false
   end
 end
@@ -97,8 +110,8 @@ class Knight < Piece
 
   def valid_move?(new_pos)
     return false unless super
-    row_offset = new_pos[0] - pos[0]
-    col_offset = new_pos[1] - pos[1]
+    row_offset = new_pos[:row] - pos[:row]
+    col_offset = new_pos[:col] - pos[:col]
 
     offsets = [row_offset.abs, col_offset.abs].sort
     return true if offsets == [1, 2]
@@ -113,8 +126,8 @@ class Rook < Piece
 
   def valid_move?(new_pos)
     return false unless super
-    row_offset = new_pos[0] - pos[0]
-    col_offset = new_pos[1] - pos[1]
+    row_offset = new_pos[:row] - pos[:row]
+    col_offset = new_pos[:col] - pos[:col]
     return true if (row_offset == 0 || col_offset == 0)
     false
   end
@@ -127,8 +140,8 @@ class Queen < Piece
 
   def valid_move?(new_pos)
     return false unless super
-    row_offset = new_pos[0] - pos[0]
-    col_offset = new_pos[1] - pos[1]
+    row_offset = new_pos[:row] - pos[:row]
+    col_offset = new_pos[:col] - pos[:col]
     return true if row_offset.abs == col_offset.abs
     return true if (row_offset == 0 || col_offset == 0)
     false
@@ -141,8 +154,8 @@ class King < Piece
   end
   def valid_move?(new_pos)
     return false unless super
-    row_offset = new_pos[0] - pos[0]
-    col_offset = new_pos[1] - pos[1]
+    row_offset = new_pos[:row] - pos[:row]
+    col_offset = new_pos[:col] - pos[:col]
     return true if row_offset.abs <= 1 && col_offset.abs <= 1
     false
   end
@@ -151,5 +164,9 @@ end
 class EmptyPiece < Piece
   def valid_move?(to)
     return false
+  end
+
+  def empty?
+    true
   end
 end

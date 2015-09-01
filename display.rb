@@ -17,7 +17,7 @@ class Display
     @board.grid.each_with_index do |row, row_idx|
       string << row_letters.shift
       row.each_with_index do |piece, column_idx|
-        pos = [row_idx, column_idx]
+        pos = {row: row_idx, col: column_idx}
         string << piece.to_s.colorize(color(pos))
       end
       string << "\n"
@@ -27,7 +27,7 @@ class Display
   end
 
   def color(pos)
-    background = (pos[0] + pos[1]).even? ? :light_blue : :light_green
+    background = (pos[:row] + pos[:col]).even? ? :light_blue : :light_green
     background = :yellow if cursor.at?(pos)
     background = :red if cursor.selected?(pos)
     color = board.player_color(pos)

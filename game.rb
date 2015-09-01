@@ -1,4 +1,4 @@
-#Handles primary game loop; talks with board, players, display
+# Handles primary game loop; talks with board, players, display
 # require_relative "board"
 # require_relative "display"
 # require_relative "piece"
@@ -11,6 +11,7 @@ Create a hash to encapsulate positions {row: 0, col: 0}
 Move handling of moving pieces to another method outside Cursor#select!
 
 =end
+
 load "board.rb"
 load "display.rb"
 load "piece.rb"
@@ -18,6 +19,7 @@ load "player.rb"
 load "cursor.rb"
 load "cursor_input.rb"
 require "colorize"
+NIL_POSITION = {row: nil, col: nil}
 
 class Game
   attr_accessor :key_press
