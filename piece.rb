@@ -6,6 +6,13 @@
 # only returns false for moves that are ALWAYS invalid.
 # board should handle other checks (blocking pieces, wrong attacked color, check, etc.)
 
+
+=begin #refactor and Notes
+Create new methods valid_diagonal, valid_horizontal, valid_vertical, ...
+Create new methods in Board along_diagonal, along ... (return all pieces along given direction)
+Also check that move does not create suicidal conditions. (Own check.)
+Create methods for valid_moves (return all valid moves a piece can make)
+=end
 class Piece
   attr_reader :color
   attr_accessor :pos, :moved

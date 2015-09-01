@@ -5,7 +5,12 @@
 # require_relative "player"
 # require_relative "cursor_input"
 # require_relative "cursor"
+=begin
+Refactor Notes
+Create a hash to encapsulate positions {row: 0, col: 0}
+Move handling of moving pieces to another method outside Cursor#select!
 
+=end
 load "board.rb"
 load "display.rb"
 load "piece.rb"

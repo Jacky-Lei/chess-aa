@@ -1,4 +1,10 @@
 #Board Class, this will handles board state, wins/losses/piece positions/check
+
+=begin #notes
+Check/Checkmate/Stalemate conditions checker
+
+=end
+
 class Board
   #Pieces, shorthand.
   WR = {type: :rook, color: :white}
@@ -44,10 +50,8 @@ class Board
 
   def move(from, to)
     if valid_move?(from, to)
-      from_row = from[0]
-      from_col = from[1]
-      to_row = to[0]
-      to_col = to[1]
+      from_row, from_col = from[0], from[1]
+      to_row, to_col = to[0], to[1]
       piece = grid[from_row][from_col]
 
       piece.pos = to
@@ -58,10 +62,8 @@ class Board
   end
 
   def valid_move?(from, to)
-    from_row = from[0]
-    from_col = from[1]
-    to_row = to[0]
-    to_col = to[1]
+    from_row, from_col = from[0], from[1]
+    to_row, to_col = to[0], to[1]
     grid[from_row][from_col].valid_move?(to)
   end
 

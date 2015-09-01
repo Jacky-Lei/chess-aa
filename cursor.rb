@@ -19,10 +19,10 @@ class Cursor
   end
 
   def select!
-    if self.selected_pos == pos
+    if selected?(pos)
       deselect!
-    elsif self.selected_pos != [nil, nil] #second move
-      board.move(selected_pos, pos)
+    elsif !selected?([nil, nil]) #second move
+      board.move(selected_pos, pos) #move me!
       deselect!
     else
       self.selected_pos = pos
@@ -30,7 +30,7 @@ class Cursor
   end
 
   def deselect!
-    self.selected_pos = [nil, nil]
+    self.selected_pos = [nil, nil] #consider special class
   end
 
   def move(direction)
