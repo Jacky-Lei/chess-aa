@@ -29,7 +29,7 @@ module KeyPress
     when "\t"
       #do nothing for now.
     when "\e" #Escape Key
-      deselect_piece
+      cursor.deselect!
     when "\e[A"
       cursor.move(:up)
     when "\e[B"

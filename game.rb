@@ -4,11 +4,13 @@
 # require_relative "piece"
 # require_relative "player"
 # require_relative "cursor_input"
+# require_relative "cursor"
 
 load "board.rb"
 load "display.rb"
 load "piece.rb"
 load "player.rb"
+load "cursor.rb"
 load "cursor_input.rb"
 require "colorize"
 
@@ -19,8 +21,8 @@ class Game
 
   def initialize
     @key_press = nil
-    @cursor = Cursor.new
     @board = Board.new
+    @cursor = Cursor.new(@board)
     @display = Display.new(@board, @cursor)
   end
 
@@ -35,10 +37,12 @@ class Game
 
   def game_over?
     false
+    #Will eventually check win/lose/draw conditions.
   end
 
   def game_over!
     false
+    #Final messages, display winner, etc.
   end
 end
 
