@@ -30,7 +30,7 @@ class Display
     background = (pos[:row] + pos[:col]).even? ? :light_blue : :light_green
     background = :yellow if cursor.at?(pos)
     background = :red if cursor.selected?(pos)
-    color = board.player_color(pos)
+    color = board.color_of(pos)
 
     {color: color, background: background}
   end

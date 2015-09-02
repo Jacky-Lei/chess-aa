@@ -78,37 +78,36 @@ class Board
   end
 
   #Returns color of piece at board
-  def player_color(pos)
-    self[pos].color
-  end
-
-  def Board.move_hash(pos, color)
-    {pos: pos.dup, color: color}
-  end
 
   def [](pos)
     grid[pos[:row]][pos[:col]]
   end
 
-  def hypothetical_check(start_pos = [nil, nil], end_pos = [nil, nil], color)
-    #Create duplicated board.
-    fake_grid = @grid.map do |grid_row|
-      grid_row.map {|piece| piece.class.new(piece.color, piece.pos, nil)}
+  def []=(pos, set)
+    grid[pos[:row]][pos[:col]] = set
+  end
+
+  def dup
+    dup_grid = []
+    grid.each_with_index do |row, r_idx|
+      dup_grid[r_idx] = []
+      row.each_with_index do |piece, c_idx|
+        pos = {row: r_idx, col: c_idx}
+        piece = grid[r_idx][c_idx]
+        dup_grid[r_idx][c_idx] = piece.class.new(piece.color, pos, nil)
+      end
     end
-    fake_board = Board.new(fake_grid)
-    fake_board.move!(start_pos, end_pos)
-    in_check = fake_board.in_check?(color)
-    in_check
+    Board.new(dup_grid)
   end
 
   def in_check?(color)
-    our_king = grid.flatten.find {|piece| piece.color == color && piece.is_a?(King)}
-    opponent_color = (color == :white ? :black : :white)
-    opponent_pieces = grid.flatten.select {|piece| piece.color == opponent_color}
-    puts "opponent_pieces.count = #{opponent_pieces.count}"
-    opponent_pieces.any? {|piece| piece.possible_moves.include?(our_king.pos)}
-    opponent_pieces.each do |piece|
-      puts "piece.pos (#{piece.pos}) => piece.possible_moves (#{piece.possible_moves})"
+    return false unless color == :white || color == :black
+
+    opp_color = (color == :white ? :black : :white)
+    king_piece = grid.flatten.find {|piece| piece.color == color && piece.is_a?(King)}
+
+    grid.flatten.any? do |piece|
+      piece.color == opp_color && piece.possible_moves.include?(king_piece.pos)
     end
   end
 
@@ -123,18 +122,22 @@ class Board
   private
   def moves(pos, steps, max_travel=8)#ugly code.
     moves = []
-    steps.each do |_, offsets|
-      move_pos = pos.dup
+    steps.each do |_, offsets|#Clean this up. Ugly
+      move_pos = pos
       while on_board?(move_pos)
-        moves << Board.move_hash(move_pos, self[move_pos].color)
-        break if occupied?(move_pos) unless move_pos == pos #fucker.
+        move_pos = move_pos.dup
+        # moves << Board.move_hash(move_pos, self[move_pos].color)
+        moves << move_pos
+        break if occupied?(move_pos) unless move_pos == pos
 
-        move_pos[:row] += offsets[:row]; move_pos[:col] += offsets[:col]
+        move_pos[:row] += offsets[:row]
+        move_pos[:col] += offsets[:col]
         break if (move_pos[:row] - pos[:row]).abs > max_travel * offsets[:row].abs
         break if (move_pos[:col] - pos[:col]).abs > max_travel * offsets[:col].abs
+        # puts offsets
       end
     end
-    moves.delete_if {|el| el[:pos] == pos}#don't inlcude starting_position
+    moves.delete_if {|el| el == pos || !on_board?(el)}#don't inlcude starting_position
     moves
   end
 
@@ -155,21 +158,24 @@ class Board
     color = self[pos].color
     direction = (color == :white ? -1 : 1)
     moves = []
-    new_pos = {row: pos[:row] + 2 * direction, col: pos[:col]}
-    moves << new_pos unless moved || occupied?(new_pos)
 
-    new_pos = {row: pos[:row] + 1 * direction, col: pos[:col]}
-    moves << new_pos unless occupied?(new_pos)
+    one_step = {row: pos[:row] + 1 * direction, col: pos[:col]} #Forward by 1 if not blocked.
+    moves << one_step if on_board?(one_step) && !occupied?(one_step)
 
-    # new_pos = {row: pos[:row] + 1 * direction, col: pos[:col] + 1}
-    # moves << new_pos if occupied?(new_pos) && owner(new_pos) != color
+    two_step = {row: pos[:row] + 2 * direction, col: pos[:col]} #Forward by 2 if not moved.
+    moves << two_step if on_board?(two_step) && !moved && !(occupied?(one_step) || occupied?(two_step)) #Missing logic for if there is a pawn at new_pos - 1
 
-    # new_pos = {row: pos[:row] + 1 * direction, col: pos[:col] - 1}
-    # moves << new_pos if occupied?(new_pos) && owner(new_pos) != color
+
+    attack_l = {row: pos[:row] + 1 * direction, col: pos[:col] + 1}
+    moves << attack_l if on_board?(attack_l) && occupied?(attack_l) && color_of(attack_l) != color
+
+    attack_r = {row: pos[:row] + 1 * direction, col: pos[:col] - 1}
+    moves << attack_r if on_board?(attack_r) && occupied?(attack_r) && color_of(attack_r) != color
+
     moves
   end
 
-  def owner(pos)
+  def color_of(pos)
     self[pos].color
   end
 
@@ -179,17 +185,27 @@ class Board
     end
   end
 
+  def valid_move?(from, to)
+    piece = self[from]
+    moves_to = piece.moves_to?(to) && !(color_of(to)==piece.color)
+    tried_move = try_move(from, to)
+    moves_to && tried_move
+  end
+
+  def try_move(from, to)
+    test_board = self.dup
+    piece = test_board[from]
+    test_board.move!(from, to)#note, Board#dup does not duplicate @moved state for pieces.
+    !test_board.in_check?(piece.color)
+  end
+
   def move!(from, to)
     piece = self[from]
     piece.pos = to
     piece.moved = true
 
-    grid[to[:row]][to[:col]] = piece#Eventually write capture method for if piece exists at to.
-    grid[from[:row]][from[:col]] = EmptyPiece.new(:default, from, self)
-  end
-
-  def valid_move?(from, to) #delete this eventually. Working on new methods.
-    self[from].valid_move?(to)
+    self[to] = piece#Eventually write capture method for if piece exists at to.
+    self[from] = EmptyPiece.new(:default, from, self)
   end
 
 end

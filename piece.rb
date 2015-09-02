@@ -33,15 +33,20 @@ class Piece
   end
 
   def valid_move?(new_pos)
-    return valid_moves.include?(new_pos)
+    # return valid_moves.include?(new_pos)
   end
 
   def valid_moves(check_next_level=true)
-    res = possible_moves.delete_if do |move_data|
-      move_data[:color] == self.color || (check_next_level && board.hypothetical_check(pos, move_data[:pos], self.color))
-    end.map {|move_data| move_data[:pos]}
+    raise "Not yet implemented #{self.class}"
   end
 
+  def moves_to?(new_pos)
+    possible_moves.include?(new_pos)
+  end
+
+  def possible_moves
+    raise "Not yet implemented #{self.class}"
+  end
 end
 
 class Pawn < Piece
@@ -50,7 +55,7 @@ class Pawn < Piece
   end
 
   def possible_moves(check_next_level=true)
-    moves_data = board.pawn_moves(pos, @moved)
+      board.pawn_moves(pos, @moved)
     # p "Do we make it to here?"
     # super(moves_data, check_next_level)
   end
@@ -81,7 +86,6 @@ class Knight < Piece
   def possible_moves(check_next_level=true)
     move_data = board.knight_moves(pos)
     # move_data.map {|key, value| value[:pos]}
-
   end
 end
 
@@ -104,7 +108,6 @@ class Queen < Piece
 
   def possible_moves(check_next_level=true)
     moves_data = board.diagonal_moves(pos) + board.lateral_moves(pos)
-    move_data.map {|key, value| value[:pos]}
 
   end
 end
@@ -116,7 +119,6 @@ class King < Piece
 
   def possible_moves(check_next_level=true)
     move_data = board.lateral_moves(pos, 1) + board.diagonal_moves(pos, 1)
-    move_data.map {|key, value| value[:pos]}
 
   end
 end
