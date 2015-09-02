@@ -34,7 +34,7 @@ class Game
   end
 
   def play
-    until game_over?
+    until board.over?
       display.render
       @key_press = get_key_press
       process_key_press
@@ -43,12 +43,15 @@ class Game
   end
 
   def game_over?
-    false
-    #Will eventually check win/lose/draw conditions.
+    board.over?
   end
 
   def game_over!
-    false
+      if board.in_check?(board.players.first)
+        puts "#{board.players.first.to_s} is in checkmate! #{board.players.last.to_s} wins!"
+      else
+        puts "STALEMATE!"
+      end
     #Final messages, display winner, etc.
   end
 end

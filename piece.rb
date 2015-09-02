@@ -37,7 +37,7 @@ class Piece
   end
 
   def valid_moves(check_next_level=true)
-    raise "Not yet implemented #{self.class}"
+    possible_moves.reject {|move| board[move].color == self.color}
   end
 
   def moves_to?(new_pos)
@@ -95,9 +95,7 @@ class Rook < Piece
   end
 
   def possible_moves(check_next_level=true)
-    move_data = board.lateral_moves(pos)
-    # move_data.map {|key, value| value[:pos]}
-
+    board.lateral_moves(pos)
   end
 end
 
@@ -126,6 +124,10 @@ end
 class EmptyPiece < Piece
   def valid_move?(to)
     return false
+  end
+
+  def valid_moves
+    []
   end
 
   def possible_moves(check_next_level=true)

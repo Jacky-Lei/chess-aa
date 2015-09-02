@@ -59,7 +59,7 @@ class Board
     dll: {row:  1, col: -2}
   }
 
-  attr_reader :grid
+  attr_reader :grid, :players
 
   def initialize(grid = nil)
     if grid == nil
@@ -75,6 +75,7 @@ class Board
       @grid = grid
       grid.flatten.each {|piece| piece.board = self}
     end
+    @players = [:white, :black]
   end
 
   #Returns color of piece at board
@@ -182,10 +183,45 @@ class Board
   def move(from, to)
     if valid_move?(from, to)
       move!(from, to)
+      players.rotate!
+    end
+  end
+
+  def over?
+    !can_move?(players.first)
+  end
+
+  def stalemate?(color)
+    !can_move?(color) && !in_check?(color)
+  end
+
+  def checkmate(color)
+    !can_move?(color) && in_check?(color)
+  end
+
+  def can_move?(color)
+    a = acan_move?(color)
+    puts "#{color} can move? (#{a})"
+    return a
+  end
+  def acan_move?(color)
+    grid.flatten.any? do |piece|
+      # puts "valid moves? #{piece.valid_moves}"
+      if (piece.color == color) && !piece.valid_moves.empty?
+        puts "VALID_MOVES??? LOL??? #{piece.valid_moves} from (#{piece}) at #{piece.pos}"
+        return true
+      end
+      # do |move|
+        # if valid_move?(piece.pos, move)
+          # puts "valid move: #{piece}@(#{piece.pos}) => #{(move)}"
+          # true
+        # end
+      # end
     end
   end
 
   def valid_move?(from, to)
+    return false if self[from].color != players.first
     piece = self[from]
     moves_to = piece.moves_to?(to) && !(color_of(to)==piece.color)
     tried_move = try_move(from, to)
@@ -193,6 +229,7 @@ class Board
   end
 
   def try_move(from, to)
+    return false if self[from].color == self[to].color
     test_board = self.dup
     piece = test_board[from]
     test_board.move!(from, to)#note, Board#dup does not duplicate @moved state for pieces.
